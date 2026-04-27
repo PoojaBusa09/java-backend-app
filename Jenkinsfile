@@ -32,6 +32,16 @@ pipeline {
                 }
             }
         }
+        stage('Docker Build') {
+            steps {
+                sh 'docker build -t java-backend-app .'
+            }
+        }
 
+        stage('Run Container') {
+            steps {
+                sh 'docker run -d -p 8081:8081 --name backend-app java-backend-app'
+            }
+        }
     }
 }
