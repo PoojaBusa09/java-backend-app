@@ -40,8 +40,19 @@ pipeline {
 
         stage('Run Container') {
             steps {
+                docker rm -f backend-app || true
                 sh 'docker run -d -p 8081:8081 --name backend-app java-backend-app'
             }
         }
+        stage('Kubernetes Deploy') {
+            steps {
+                sh '''
+                    kubectl apply -f deployment.yaml
+                    kubectl apply -f service.yaml
+                    kubectl rollout status deployment/java-backend-app-deployment
+                '''
+            }
+        }
+
     }
 }
