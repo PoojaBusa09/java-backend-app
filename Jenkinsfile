@@ -12,7 +12,6 @@ pipeline {
     environment {
         SONAR_PROJECT_KEY = "java-backend-app"
         SONAR_PROJECT_NAME = "java-backend-app"
-        NEXUS_URL = "http://192.168.0.50:9090/repository/maven_releases/"
         NEXUS_URL = "http://192.168.0.50:9090/repository/maven_snapshots/"
     }
 
