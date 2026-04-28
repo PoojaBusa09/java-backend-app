@@ -1,6 +1,20 @@
 pipeline {
     agent any
 
+    tools {
+        maven 'Maven3'
+    }
+
+    triggers {
+        githubPush()
+    }
+
+    environment {
+        SONAR_PROJECT_KEY = "java-backend-app"
+        SONAR_PROJECT_NAME = "java-backend-app"
+        NEXUS_URL = "http://localhost:9090/repository/maven-releases/"
+    }
+
     stages {
 
         stage('Checkout') {
@@ -9,9 +23,15 @@ pipeline {
             }
         }
 
+        stage('Clean Build') {
+            steps {
+                sh 'mvn clean'
+            }
+        }
+
         stage('Build') {
             steps {
-                sh 'mvn clean package'
+                sh 'mvn package -DskipTests'
             }
         }
 
@@ -24,22 +44,21 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    sh '''
+                    sh """
                         mvn sonar:sonar \
-                        -Dsonar.projectKey=java-backend-app \
-                        -Dsonar.projectName=java-backend-app
-                    '''
+                        -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                        -Dsonar.projectName=${SONAR_PROJECT_NAME}
+                    """
                 }
             }
         }
 
-        stage('Nexus Upload') {
+        stage('Nexus Deploy') {
             steps {
-                sh '''
-                    mvn deploy \
-                    -DskipTests \
-                    -DaltDeploymentRepository=nexus::default::http://localhost:9090/repository/maven-releases/
-                '''
+                sh """
+                    mvn deploy -DskipTests \
+                    -DaltDeploymentRepository=nexus::default::${NEXUS_URL}
+                """
             }
         }
 
@@ -51,22 +70,31 @@ pipeline {
 
         stage('Run Container') {
             steps {
-                sh '''
+                sh """
                     docker rm -f backend-app || true
                     docker run -d -p 8081:8081 --name backend-app java-backend-app
-                '''
+                """
             }
         }
 
         stage('Kubernetes Deploy') {
             steps {
-                sh '''
+                sh """
                     kubectl apply -f deployment.yaml
                     kubectl apply -f service.yaml
                     kubectl rollout status deployment/java-backend-app-deployment
-                '''
+                """
             }
         }
 
+    }
+
+    post {
+        success {
+            echo "✔ Pipeline SUCCESS - Deployment completed"
+        }
+        failure {
+            echo "❌ Pipeline FAILED - Check logs"
+        }
     }
 }
