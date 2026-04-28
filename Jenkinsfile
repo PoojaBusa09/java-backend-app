@@ -44,21 +44,28 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    sh """
-                        mvn sonar:sonar \
-                        -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                        -Dsonar.projectName=${SONAR_PROJECT_NAME}
-                    """
+                    withCredentials([string(credentialsId: 'jenkins-sonar-tocken', variable: 'SONAR_TOKEN')]) {
+                        sh """
+                            mvn sonar:sonar \
+                            -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                            -Dsonar.projectName=${SONAR_PROJECT_NAME} \
+                            -Dsonar.login=$SONAR_TOKEN
+                        """
+                    }
                 }
             }
         }
 
         stage('Nexus Deploy') {
             steps {
-                sh """
-                    mvn deploy -DskipTests \
-                    -DaltDeploymentRepository=nexus::default::${NEXUS_URL}
-                """
+                withCredentials([usernamePassword(credentialsId: 'nexus-cred', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                    sh """
+                        mvn deploy -DskipTests \
+                        -DaltDeploymentRepository=nexus::default::${NEXUS_URL} \
+                        -Dnexus.username=$NEXUS_USER \
+                        -Dnexus.password=$NEXUS_PASS
+                    """
+                }
             }
         }
 
@@ -86,7 +93,6 @@ pipeline {
                 """
             }
         }
-
     }
 
     post {
