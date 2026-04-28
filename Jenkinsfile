@@ -44,7 +44,6 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    withCredentials([string(credentialsId: 'jenkins-sonar-tocken', variable: 'SONAR_TOKEN')]) {
                         sh """
                             mvn sonar:sonar \
                             -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
@@ -53,7 +52,7 @@ pipeline {
                     }
                 }
             }
-        }
+        
 
         stage('Nexus Deploy') {
             steps {
