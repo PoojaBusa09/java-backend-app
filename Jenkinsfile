@@ -48,8 +48,7 @@ pipeline {
                         sh """
                             mvn sonar:sonar \
                             -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                            -Dsonar.projectName=${SONAR_PROJECT_NAME} \
-                            -Dsonar.login=$SONAR_TOKEN
+                            -Dsonar.projectName=${SONAR_PROJECT_NAME}
                         """
                     }
                 }
