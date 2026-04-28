@@ -12,7 +12,7 @@ pipeline {
     environment {
         SONAR_PROJECT_KEY = "java-backend-app"
         SONAR_PROJECT_NAME = "java-backend-app"
-        NEXUS_URL = "http://192.168.0.50:9090/repository/maven_snapshots/"
+
     }
 
     stages {
@@ -54,15 +54,14 @@ pipeline {
             }
         
 
-        stage('Nexus Deploy') {
+         stage('Nexus Deploy') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'nexus-cred', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
-                    sh """
-                        mvn deploy -DskipTests \
-                        -DaltDeploymentRepository=nexus::default::${NEXUS_URL} \
-                        -Dnexus.username=$NEXUS_USER \
-                        -Dnexus.password=$NEXUS_PASS
-                    """
+                withCredentials([usernamePassword(
+                    credentialsId: 'nexus-cred',
+                    usernameVariable: 'NEXUS_USER',
+                    passwordVariable: 'NEXUS_PASS'
+                )]) {
+                    sh 'mvn clean deploy -DskipTests'
                 }
             }
         }
