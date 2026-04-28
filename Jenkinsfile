@@ -11,7 +11,7 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'mvn clean install'
+                sh 'mvn clean package'
             }
         }
 
@@ -25,13 +25,24 @@ pipeline {
             steps {
                 withSonarQubeEnv('SonarQube') {
                     sh '''
-                        mvn clean verify sonar:sonar \
+                        mvn sonar:sonar \
                         -Dsonar.projectKey=java-backend-app \
                         -Dsonar.projectName=java-backend-app
                     '''
                 }
             }
         }
+
+        stage('Nexus Upload') {
+            steps {
+                sh '''
+                    mvn deploy \
+                    -DskipTests \
+                    -DaltDeploymentRepository=nexus::default::http://localhost:9090/repository/maven-releases/
+                '''
+            }
+        }
+
         stage('Docker Build') {
             steps {
                 sh 'docker build -t java-backend-app .'
@@ -40,10 +51,13 @@ pipeline {
 
         stage('Run Container') {
             steps {
-                docker rm -f backend-app || true
-                sh 'docker run -d -p 8081:8081 --name backend-app java-backend-app'
+                sh '''
+                    docker rm -f backend-app || true
+                    docker run -d -p 8081:8081 --name backend-app java-backend-app
+                '''
             }
         }
+
         stage('Kubernetes Deploy') {
             steps {
                 sh '''
