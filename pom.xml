@@ -73,5 +73,19 @@
 
         </plugins>
     </build>
+     <distributionManagement>
+    
+    <!-- For release versions -->
+    <repository>
+        <id>nexus</id>
+        <url>http://192.168.0.50:9090/repository/maven_releases/</url>
+    </repository>
 
+    <!-- For snapshot versions -->
+    <snapshotRepository>
+        <id>nexus</id>
+        <url>http://192.168.0.50:9090/repository/maven-snapshots/</url>
+    </snapshotRepository>
+
+</distributionManagement>
 </project>
