@@ -23,6 +23,8 @@
 
     <properties>
         <java.version>17</java.version>
+        <sonar.host.url>http://192.168.0.50:9000</sonar.host.url>
+             
     </properties>
 
     <dependencies>
@@ -39,21 +41,6 @@
         </dependency>
 
     </dependencies>
-
-    <!-- ⭐ Nexus Deployment -->
-    <distributionManagement>
-
-        <snapshotRepository>
-            <id>nexus</id>
-            <url>http://192.168.0.50:9090/repository/maven_snapshots/</url>
-        </snapshotRepository>
-
-        <repository>
-            <id>nexus</id>
-            <url>http://192.168.0.50:9090/repository/maven_releases/</url>
-        </repository>
-
-    </distributionManagement>
 
     <build>
         <plugins>
@@ -73,6 +60,9 @@
 
         </plugins>
     </build>
+        
+   <!-- ⭐ Nexus Deployment -->
+    
      <distributionManagement>
     
     <!-- For release versions -->
