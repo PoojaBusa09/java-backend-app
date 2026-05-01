@@ -12,7 +12,6 @@ pipeline {
     environment {
         SONAR_PROJECT_KEY = "java-backend-app"
         SONAR_PROJECT_NAME = "java-backend-app"
-
     }
 
     stages {
@@ -23,49 +22,39 @@ pipeline {
             }
         }
 
-        stage('Clean Build') {
+        stage('Build & Test') {
             steps {
-                sh 'mvn clean'
-            }
-        }
-
-        stage('Build') {
-            steps {
-                sh 'mvn package -DskipTests'
-            }
-        }
-
-        stage('Test') {
-            steps {
-                sh 'mvn test'
+                sh 'mvn clean install'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
+                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
                         sh """
                             mvn sonar:sonar \
                             -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                            -Dsonar.projectName=${SONAR_PROJECT_NAME}
+                            -Dsonar.projectName=${SONAR_PROJECT_NAME} \
+                            -Dsonar.login=$SONAR_TOKEN
                         """
                     }
                 }
             }
-        
+        }
+
         stage('Quality Gate') {
-    steps {
-        timeout(time: 10, unit: 'MINUTES') {
-            script {
-                def qg = waitForQualityGate(abortPipeline: false)
-                echo "Quality Gate Status: ${qg.status}"
+            steps {
+                timeout(time: 10, unit: 'MINUTES') {
+                    script {
+                        def qg = waitForQualityGate(abortPipeline: false)
+                        echo "Quality Gate Status: ${qg.status}"
+                    }
+                }
             }
         }
-    }
-}
-       
 
-         stage('Nexus Deploy') {
+        stage('Nexus Deploy') {
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: 'nexus-cred',
@@ -79,7 +68,7 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                sh 'docker build -t java-backend-app .'
+                sh 'docker build -t java-backend-app:latest .'
             }
         }
 
@@ -87,7 +76,7 @@ pipeline {
             steps {
                 sh """
                     docker rm -f backend-app || true
-                    docker run -d -p 8081:8081 --name backend-app java-backend-app
+                    docker run -d -p 8081:8081 --name backend-app java-backend-app:latest
                 """
             }
         }
