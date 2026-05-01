@@ -8,6 +8,7 @@ pipeline {
     environment {
         SONAR_PROJECT_KEY = "java-backend-app"
         SONAR_PROJECT_NAME = "java-backend-app"
+        SONAR_HOST_URL = "http://10.13.8.246:9000"
     }
 
     stages {
@@ -28,11 +29,13 @@ pipeline {
             steps {
                 withSonarQubeEnv('SonarQube') {
                     withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+
+                        // IMPORTANT: using single quotes to avoid token issues
                         sh '''
                         mvn clean verify sonar:sonar \
-                        -Dsonar.projectKey=java-backend-app \
-                        -Dsonar.projectName=java-backend-app \
-                        -Dsonar.host.url=http://10.13.8.246:9000 \
+                        -Dsonar.projectKey=$SONAR_PROJECT_KEY \
+                        -Dsonar.projectName=$SONAR_PROJECT_NAME \
+                        -Dsonar.host.url=$SONAR_HOST_URL \
                         -Dsonar.login=$SONAR_TOKEN
                         '''
                     }
@@ -45,8 +48,11 @@ pipeline {
                 timeout(time: 10, unit: 'MINUTES') {
                     script {
                         def qg = waitForQualityGate()
+
                         if (qg.status != 'OK') {
-                            error "Pipeline aborted due to Quality Gate failure: ${qg.status}"
+                            error "❌ Pipeline aborted due to Quality Gate failure: ${qg.status}"
+                        } else {
+                            echo "✔ Quality Gate PASSED"
                         }
                     }
                 }
@@ -97,10 +103,10 @@ pipeline {
 
     post {
         success {
-            echo "✔ Pipeline SUCCESS - Deployment completed"
+            echo "✔ PIPELINE SUCCESS - Deployment Completed"
         }
         failure {
-            echo "❌ Pipeline FAILED - Check logs"
+            echo "❌ PIPELINE FAILED - Check Sonar/Auth logs"
         }
     }
 }
