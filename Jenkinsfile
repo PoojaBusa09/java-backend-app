@@ -8,7 +8,7 @@ pipeline {
     environment {
         SONAR_PROJECT_KEY = "java-backend-app"
         SONAR_PROJECT_NAME = "java-backend-app"
-        SONAR_HOST_URL = "http://10.13.8.246:9000"
+        SONAR_HOST_URL = "http://192.168.0.50:9000"
     }
 
     stages {
