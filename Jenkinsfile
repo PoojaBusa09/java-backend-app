@@ -43,22 +43,19 @@ pipeline {
             }
         }
 
-        stage('Quality Gate') {
-            steps {
-                timeout(time: 10, unit: 'MINUTES') {
-                    script {
-                        def qg = waitForQualityGate()
+       stage('Quality Gate') {
+    steps {
+        script {
+            def qg = waitForQualityGate abortPipeline: false
 
-                        if (qg.status != 'OK') {
-                            error "❌ Pipeline aborted due to Quality Gate failure: ${qg.status}"
-                        } else {
-                            echo "✔ Quality Gate PASSED"
-                        }
-                    }
-                }
+            if (qg.status != 'OK') {
+                error "❌ Quality Gate failed: ${qg.status}"
+            } else {
+                echo "✔ Quality Gate PASSED"
             }
         }
-
+    }
+}
         stage('Nexus Deploy') {
             steps {
                 withCredentials([usernamePassword(
